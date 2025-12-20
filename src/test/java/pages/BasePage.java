@@ -12,7 +12,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.asserts.SoftAssert;
 import utilities.BaseDriver;
-
 import java.io.*;
 import java.security.SecureRandom;
 import java.time.Duration;
