@@ -17,13 +17,13 @@ import java.util.Properties;
 public class BaseDriver {
 
     private static AndroidDriver driver;
-    private static final String CAPABILITIES_FILE_PATH = "src/test/resources/capabilities_samsung.properties";
+    private static final String CAPABILITIES_FILE_PATH = "src/test/resources/capabilities_oppo.properties";
     public static Properties props;
 
     @BeforeMethod(alwaysRun = true)
     public void setDriver() throws MalformedURLException {
-        File f = new File("src");
-        File fs = new File(f, "app-release.apk");
+        File f = new File("resources");
+        File fs = new File(f, "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk");
 
         PropertyReader.loadProperties(CAPABILITIES_FILE_PATH);
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
