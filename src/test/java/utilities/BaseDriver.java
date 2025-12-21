@@ -17,7 +17,7 @@ import java.util.Properties;
 public class BaseDriver {
 
     private static AndroidDriver driver;
-    private static final String CAPABILITIES_FILE_PATH = "resources/capabilities_oppo.properties";
+    private static final String CAPABILITIES_FILE_PATH = "resources/capabilities_redminote10.properties";
     public static Properties props;
 
     @BeforeMethod(alwaysRun = true)
@@ -25,17 +25,22 @@ public class BaseDriver {
         File f = new File("resources");
         File fs = new File(f, "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk");
 
-        PropertyReader.loadProperties(CAPABILITIES_FILE_PATH);
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
 
-        props = PropertyReader.getAllProperties();
-        props.forEach((key, value) ->
-                desiredCapabilities.setCapability(key.toString(), value.toString()));
+        // Standard capability
+        desiredCapabilities.setCapability("platformName", "Android");
+
+        // Appium-specific capabilities with appium: prefix
+        desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");
+        desiredCapabilities.setCapability("appium:udid", "bc8e9e56");
+        desiredCapabilities.setCapability("appium:deviceName", "redminote10");
+        desiredCapabilities.setCapability("appium:appPackage", "com.swaglabsmobileapp");
+        desiredCapabilities.setCapability("appium:appActivity", "com.swaglabsmobileapp.MainActivity");
+        // desiredCapabilities.setCapability("appium:app", fs.getAbsolutePath());
 
         URL remoteUrl = new URL("http://127.0.0.1:4723");
         driver = new AndroidDriver(remoteUrl, desiredCapabilities);
 
-        // Set implicit wait
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
     }
 
@@ -47,14 +52,15 @@ public class BaseDriver {
     public synchronized void closeBrowser(ITestResult result) {
         try {
             if (result.getStatus() == ITestResult.FAILURE) {
-
                 BasePage basePage = new BasePage();
                 basePage.takeScreenShotAllureAttach(result.getName());
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            getDriver().quit();
+            if (getDriver() != null) {
+                getDriver().quit();
+            }
         }
     }
 }

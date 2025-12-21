@@ -79,6 +79,13 @@
             <version>2.29.1</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/io.appium/java-client -->
+        <dependency>
+            <groupId>io.appium</groupId>
+            <artifactId>java-client</artifactId>
+            <version>10.0.0</version>
+        </dependency>
+
         <!-- Maven Surefire Plugin -->
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
