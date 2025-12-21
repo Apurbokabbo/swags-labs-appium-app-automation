@@ -17,7 +17,7 @@ import java.util.Properties;
 public class BaseDriver {
 
     private static AndroidDriver driver;
-    private static final String CAPABILITIES_FILE_PATH = "src/test/resources/capabilities_oppo.properties";
+    private static final String CAPABILITIES_FILE_PATH = "resources/capabilities_oppo.properties";
     public static Properties props;
 
     @BeforeMethod(alwaysRun = true)
