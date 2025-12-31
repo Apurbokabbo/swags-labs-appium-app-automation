@@ -17,7 +17,7 @@ import java.util.Properties;
 public class BaseDriver {
 
     private static AndroidDriver driver;
-    private static final String CAPABILITIES_FILE_PATH = "capabilities_oppo.properties";
+    private static final String CAPABILITIES_FILE_PATH = "resources/capabilities_oppo.properties";
     public static Properties props;
 
     @BeforeMethod(alwaysRun = true)
@@ -25,18 +25,21 @@ public class BaseDriver {
         File f = new File("resources");
         File fs = new File(f, "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk");
 
+        PropertyReader.loadProperties(CAPABILITIES_FILE_PATH);
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
 
-        // Standard W3C capabilities (no prefix needed)
-        desiredCapabilities.setCapability("platformName", "Android");
 
-        // Appium-specific capabilities (MUST have appium: prefix)
+//        props = PropertyReader.getAllProperties();
+//        props.forEach((key, value) ->
+//                desiredCapabilities.setCapability(key.toString(), value.toString()));
+
+
         desiredCapabilities.setCapability("appium:udid", "MZIBHELVJRG6IFTW");
         desiredCapabilities.setCapability("appium:deviceName", "OPPO F19 Pro");
         desiredCapabilities.setCapability("appium:appPackage", "com.swaglabsmobileapp");
         desiredCapabilities.setCapability("appium:appActivity", "com.swaglabsmobileapp.MainActivity");
         desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");
-        // desiredCapabilities.setCapability("appium:app", fs.getAbsolutePath());
+         desiredCapabilities.setCapability("appium:app", fs.getAbsolutePath());
 
         URL remoteUrl = new URL("http://127.0.0.1:4723/wd/hub");
         driver = new AndroidDriver(remoteUrl, desiredCapabilities);

@@ -1,5 +1,4 @@
 package pages;
-
 import io.qameta.allure.Allure;
 import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.*;
@@ -20,8 +19,10 @@ import java.util.List;
 import java.util.Random;
 
 public class BasePage extends BaseDriver {
-    public File USER_Info_PATH = new File("src/test/resources/userInfo.txt");
+    public File USER_Info_PATH = new File("resources/userInfo.txt");
     public String USER_NUMBER_1 = "";
+
+
 
     public SoftAssert softAssert = new SoftAssert();
 

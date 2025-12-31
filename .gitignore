@@ -45,3 +45,4 @@ build/
 /allure-results
 /target
 /target/
+/.env
