@@ -17,7 +17,7 @@ import java.util.Properties;
 public class BaseDriver {
 
     private static AndroidDriver driver;
-    private static final String CAPABILITIES_FILE_PATH = "resources/capabilities_redminote10.properties";
+    private static final String CAPABILITIES_FILE_PATH = "capabilities_oppo.properties";
     public static Properties props;
 
     @BeforeMethod(alwaysRun = true)
@@ -27,18 +27,18 @@ public class BaseDriver {
 
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
 
-        // Standard capability
+        // Standard W3C capabilities (no prefix needed)
         desiredCapabilities.setCapability("platformName", "Android");
 
-        // Appium-specific capabilities with appium: prefix
-        desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");
-        desiredCapabilities.setCapability("appium:udid", "bc8e9e56");
-        desiredCapabilities.setCapability("appium:deviceName", "redminote10");
+        // Appium-specific capabilities (MUST have appium: prefix)
+        desiredCapabilities.setCapability("appium:udid", "MZIBHELVJRG6IFTW");
+        desiredCapabilities.setCapability("appium:deviceName", "OPPO F19 Pro");
         desiredCapabilities.setCapability("appium:appPackage", "com.swaglabsmobileapp");
         desiredCapabilities.setCapability("appium:appActivity", "com.swaglabsmobileapp.MainActivity");
+        desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");
         // desiredCapabilities.setCapability("appium:app", fs.getAbsolutePath());
 
-        URL remoteUrl = new URL("http://127.0.0.1:4723");
+        URL remoteUrl = new URL("http://127.0.0.1:4723/wd/hub");
         driver = new AndroidDriver(remoteUrl, desiredCapabilities);
 
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
