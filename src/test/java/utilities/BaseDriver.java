@@ -34,8 +34,8 @@ public class BaseDriver {
 //                desiredCapabilities.setCapability(key.toString(), value.toString()));
 
 
-        desiredCapabilities.setCapability("appium:udid", "MZIBHELVJRG6IFTW");
-        desiredCapabilities.setCapability("appium:deviceName", "OPPO F19 Pro");
+        desiredCapabilities.setCapability("appium:udid", "ZA2233WW3N");
+        desiredCapabilities.setCapability("appium:deviceName", "moto g85 5G");
         desiredCapabilities.setCapability("appium:appPackage", "com.swaglabsmobileapp");
         desiredCapabilities.setCapability("appium:appActivity", "com.swaglabsmobileapp.MainActivity");
         desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");

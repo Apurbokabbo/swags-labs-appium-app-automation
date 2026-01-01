@@ -1,4 +1,5 @@
 package pages;
+import io.github.cdimascio.dotenv.Dotenv;
 import io.qameta.allure.Allure;
 import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.*;
@@ -20,7 +21,15 @@ import java.util.Random;
 
 public class BasePage extends BaseDriver {
     public File USER_Info_PATH = new File("resources/userInfo.txt");
-    public String USER_NUMBER_1 = "";
+
+    Dotenv dotenv = Dotenv.load();
+    public String USER_EMAIL = dotenv.get("");
+
+
+    public By menu_button = By.xpath("//android.view.ViewGroup[@content-desc=\"test-Menu\"]/android.view.ViewGroup/android.widget.ImageView");
+    public By cart_button = By.xpath("//android.view.ViewGroup[@content-desc=\"test-Cart\"]/android.view.ViewGroup/android.widget.ImageView");
+
+
 
 
 
@@ -107,7 +116,7 @@ public class BasePage extends BaseDriver {
             swipe.addAction(finger.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), width, endY));
             swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
-            getDriver().perform(Arrays.asList(swipe));
+            getDriver().perform(List.of(swipe));
         } catch (Exception e) {
             System.out.println("Error while scrolling down: " + e.getMessage());
         }
@@ -131,7 +140,7 @@ public class BasePage extends BaseDriver {
             swipe.addAction(finger.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), width, endY));
             swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
-            getDriver().perform(Arrays.asList(swipe));
+            getDriver().perform(List.of(swipe));
         } catch (Exception e) {
             System.out.println("Error while scrolling up: " + e.getMessage());
         }
@@ -350,7 +359,7 @@ public class BasePage extends BaseDriver {
         tap.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
         tap.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
-        getDriver().perform(Arrays.asList(tap));
+        getDriver().perform(List.of(tap));
     }
 
     /**
