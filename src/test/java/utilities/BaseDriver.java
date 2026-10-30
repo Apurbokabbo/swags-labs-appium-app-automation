@@ -1,69 +1,112 @@
 package utilities;
 
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.options.UiAutomator2Options;
+import io.appium.java_client.screenrecording.CanRecordScreen;
+import io.appium.java_client.android.AndroidStartScreenRecordingOptions;
+import io.qameta.allure.Allure;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import io.appium.java_client.android.AndroidDriver;
-import pages.BasePage;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Properties;
 
 public class BaseDriver {
 
-    private static AndroidDriver driver;
-    private static final String CAPABILITIES_FILE_PATH = "resources/capabilities_oppo.properties";
-    public static Properties props;
+    private static final String DEVICE = System.getProperty("device", "Motorola");
+    private static final String CAPABILITIES_FILE_PATH = "src/test/resources/capabilities_" + DEVICE + ".properties";
+    private static final ThreadLocal<AndroidDriver> DRIVER_THREAD_LOCAL = new ThreadLocal<>();
 
     @BeforeMethod(alwaysRun = true)
     public void setDriver() throws MalformedURLException {
-        File f = new File("resources");
-        File fs = new File(f, "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk");
 
         PropertyReader.loadProperties(CAPABILITIES_FILE_PATH);
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        Properties props = PropertyReader.getAllProperties();
 
+        UiAutomator2Options options = new UiAutomator2Options();
+        props.forEach((k, v) -> options.setCapability(k.toString(), v.toString()));
 
-//        props = PropertyReader.getAllProperties();
-//        props.forEach((key, value) ->
-//                desiredCapabilities.setCapability(key.toString(), value.toString()));
+        URL remoteUrl = new URL("http://127.0.0.1:4723");
+        AndroidDriver driver = new AndroidDriver(remoteUrl, options);
+        DRIVER_THREAD_LOCAL.set(driver);
 
-
-        desiredCapabilities.setCapability("appium:udid", "ZA2233WW3N");
-        desiredCapabilities.setCapability("appium:deviceName", "moto g85 5G");
-        desiredCapabilities.setCapability("appium:appPackage", "com.swaglabsmobileapp");
-        desiredCapabilities.setCapability("appium:appActivity", "com.swaglabsmobileapp.MainActivity");
-        desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");
-         desiredCapabilities.setCapability("appium:app", fs.getAbsolutePath());
-
-        URL remoteUrl = new URL("http://127.0.0.1:4723/wd/hub");
-        driver = new AndroidDriver(remoteUrl, desiredCapabilities);
-
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-    }
-
-    public static AndroidDriver getDriver() {
-        return driver;
+        // Start recording for every test (discarded later if the test passes)
+        try {
+            driver.startRecordingScreen(
+                    new AndroidStartScreenRecordingOptions()
+                            .withTimeLimit(Duration.ofMinutes(3))); // Android max is 3 min
+        } catch (Exception e) {
+            System.out.println("Could not start screen recording: " + e.getMessage());
+        }
     }
 
     @AfterMethod(alwaysRun = true)
-    public synchronized void closeBrowser(ITestResult result) {
+    public void quitDriver(ITestResult result) {
+        AndroidDriver driver = DRIVER_THREAD_LOCAL.get();
+        if (driver == null) return;
+
+        boolean failed = result.getStatus() == ITestResult.FAILURE;
+        String testName = result.getName();
+
         try {
-            if (result.getStatus() == ITestResult.FAILURE) {
-                BasePage basePage = new BasePage();
-                basePage.takeScreenShotAllureAttach(result.getName());
+            // 1) Screenshot only on failure (must happen BEFORE quit)
+            if (failed) {
+                byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+                Allure.addAttachment("Screenshot - " + testName, "image/png",
+                        new ByteArrayInputStream(png), "png");
+                saveFile("target/screenshots", testName + ".png", png);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (getDriver() != null) {
-                getDriver().quit();
-            }
+            System.out.println("Screenshot failed: " + e.getMessage());
         }
+
+        try {
+            // 2) Always stop recording; keep the video only on failure
+            String base64Video = ((CanRecordScreen) driver).stopRecordingScreen();
+            if (failed && base64Video != null && !base64Video.isEmpty()) {
+                byte[] video = Base64.getMimeDecoder().decode(base64Video);
+                Allure.addAttachment("Video - " + testName, "video/mp4",
+                        new ByteArrayInputStream(video), "mp4");
+                saveFile("target/videos", testName + ".mp4", video);
+            }
+        } catch (Exception e) {
+            System.out.println("Video failed: " + e.getMessage());
+        }
+
+        try {
+            driver.quit();
+        } catch (Exception ignored) {
+        } finally {
+            DRIVER_THREAD_LOCAL.remove();
+        }
+    }
+
+    private static void saveFile(String dir, String fileName, byte[] data) {
+        try {
+            Path folder = Paths.get(dir);
+            Files.createDirectories(folder);
+            Files.write(folder.resolve(fileName), data);
+        } catch (Exception e) {
+            System.out.println("Could not save " + fileName + ": " + e.getMessage());
+        }
+    }
+
+    public static AndroidDriver getDriver() {
+        AndroidDriver driver = DRIVER_THREAD_LOCAL.get();
+        if (driver == null) {
+            throw new IllegalStateException(
+                    "Driver not initialised. Ensure @BeforeMethod ran before calling getDriver().");
+        }
+        return driver;
     }
 }
