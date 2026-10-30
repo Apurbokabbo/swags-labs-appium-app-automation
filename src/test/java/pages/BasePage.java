@@ -1,383 +1,512 @@
 package pages;
-import io.qameta.allure.Allure;
+
 import io.appium.java_client.android.AndroidDriver;
+import io.qameta.allure.Allure;
 import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.asserts.SoftAssert;
 import utilities.BaseDriver;
 import java.io.*;
-import java.security.SecureRandom;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-public class BasePage extends BaseDriver {
-    public File USER_Info_PATH = new File("resources/userInfo.txt");
+public class BasePage extends CommonLocators {
 
-    Dotenv dotenv = Dotenv.load();
-    public String USER_EMAIL = dotenv.get("");
+    private static final Logger logger = LoggerFactory.getLogger(BasePage.class);
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
+    protected AndroidDriver driver;
+    protected WebDriverWait wait;
+    protected SoftAssert softAssert = new SoftAssert();
 
-    public By menu_button = By.xpath("//android.view.ViewGroup[@content-desc=\"test-Menu\"]/android.view.ViewGroup/android.widget.ImageView");
-    public By cart_button = By.xpath("//android.view.ViewGroup[@content-desc=\"test-Cart\"]/android.view.ViewGroup/android.widget.ImageView");
-
-
-
-
-
-    public SoftAssert softAssert = new SoftAssert();
-
-    // Common Locators
-    public By MEDIA_PERMISSION_ALLOW_ALL_BUTTON = By.id("com.android.permissioncontroller:id/permission_allow_all_button");
-
-    /**
-     * Find a single element
-     */
-    public WebElement findElement(By locator) {
-        return getDriver().findElement(locator);
+    public BasePage() {
+        // Intentionally empty. The driver may not exist yet when a page object is
+        // created as a field initializer (before @BeforeMethod). It is bound lazily
+        // by ensureInitialized() on first use.
     }
 
+    // ─── Driver binding ────────────────────────────────────────────────────────
+
     /**
-     * Write text to an element
+     * Binds this page object to the CURRENT thread's driver.
+     * A new driver is created for every test, so a page object created once as a
+     * class field must re-bind whenever the driver instance changes.
      */
-    public void writeText(By locator, String text) {
-        waitForVisibilityOfElement(locator, 5);
-        findElement(locator).click();
-        findElement(locator).clear();
-        findElement(locator).sendKeys(text);
-        try {
-            getDriver().hideKeyboard();
-        } catch (Exception e) {
-            // Keyboard already hidden
+    public void ensureInitialized() {
+        AndroidDriver current = BaseDriver.getDriver();
+        if (driver != current) {
+            driver = current;
+            wait = new WebDriverWait(driver, DEFAULT_TIMEOUT);
         }
     }
 
-    /**
-     * Get text from element
-     */
-    public String getText(By locator) {
-        return findElement(locator).getText();
+    // ─── Logging ───────────────────────────────────────────────────────────────
+
+    public void logInfo(String info) {
+        String border = "-------------------------------------------------";
+        logger.info(border);
+        logger.info(info);
+        logger.info(border);
+        Allure.step(info);
     }
 
-    /**
-     * Scroll until element is found
-     */
-    public void scrollUntilElementFound(By locator, String direction, int maxAttempts) throws InterruptedException {
-        int attempts = 0;
-        while (attempts < maxAttempts) {
-            try {
-                // Check if element is visible
-                WebElement element = findElement(locator);
-                if (element.isDisplayed()) {
-                    return;
-                }
-            } catch (Exception e) {
-                // Element not found, continue scrolling
-            }
+    // ─── Helpers ───────────────────────────────────────────────────────────────
 
-            // Perform scrolling in the given direction
-            if ("DOWN".equalsIgnoreCase(direction)) {
-                scrollDown();
-                Thread.sleep(1000);
-            } else if ("UP".equalsIgnoreCase(direction)) {
-                scrollUp();
+    /** Treats null, empty and the literal string "null" (returned by UiAutomator2) as blank. */
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty() || s.trim().equalsIgnoreCase("null");
+    }
+
+    /** Reads an attribute without ever throwing; returns "" if missing or unsupported. */
+    private String safeAttribute(WebElement el, String attribute) {
+        try {
+            String value = el.getAttribute(attribute);
+            return isBlank(value) ? "" : value.trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private void hideKeyboardQuietly() {
+        try {
+            ensureInitialized();
+            driver.hideKeyboard();
+        } catch (Exception ignored) {
+            // keyboard may already be hidden
+        }
+    }
+
+    // ─── Waits ─────────────────────────────────────────────────────────────────
+
+    public WebElement waitForVisibility(By locator) {
+        ensureInitialized();
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+    }
+
+    public WebElement waitForVisibility(By locator, int seconds) {
+        ensureInitialized();
+        return new WebDriverWait(driver, Duration.ofSeconds(seconds))
+                .until(ExpectedConditions.visibilityOfElementLocated(locator));
+    }
+
+    public WebElement waitForClickable(By locator) {
+        ensureInitialized();
+        return wait.until(ExpectedConditions.elementToBeClickable(locator));
+    }
+
+    public void waitForInvisibility(By locator) {
+        ensureInitialized();
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
+    }
+
+    public boolean isElementVisible(By locator, int timeoutSeconds) {
+        try {
+            waitForVisibility(locator, timeoutSeconds);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isElementInvisible(By locator, int timeoutSeconds) {
+        ensureInitialized();
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds))
+                    .until(ExpectedConditions.invisibilityOfElementLocated(locator));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Waits until every given element is visible (anchors of a loaded screen). */
+    public void waitForScreenLoaded(By... keyElements) {
+        for (By locator : keyElements) {
+            waitForVisibility(locator, 15);
+        }
+    }
+
+    /** Waits until the page source stops changing (UI finished loading). */
+    public void waitForScreenStable(int timeoutSeconds) {
+        ensureInitialized();
+        String previous = "";
+        int stableCount = 0;
+        long end = System.currentTimeMillis() + timeoutSeconds * 1000L;
+
+        while (System.currentTimeMillis() < end) {
+            String current = driver.getPageSource();
+            if (current.equals(previous)) {
+                if (++stableCount >= 2) return; // unchanged twice in a row = loaded
             } else {
-                throw new IllegalArgumentException("Invalid scroll direction: " + direction);
+                stableCount = 0;
             }
-
-            attempts++;
-        }
-        System.out.println("Element not found after " + maxAttempts + " attempts.");
-    }
-
-    /**
-     * Scrolls down a half-screen length using W3C Actions
-     */
-    private void scrollDown() {
-        Dimension size = getDriver().manage().window().getSize();
-        int width = size.width / 2;
-        int startY = (int) (size.height * 0.60);
-        int endY = (int) (size.height * 0.40);
-
-        try {
-            PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
-            Sequence swipe = new Sequence(finger, 1);
-
-            swipe.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), width, startY));
-            swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
-            swipe.addAction(finger.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), width, endY));
-            swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
-
-            getDriver().perform(List.of(swipe));
-        } catch (Exception e) {
-            System.out.println("Error while scrolling down: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Scrolls up a half-screen length using W3C Actions
-     */
-    private void scrollUp() {
-        Dimension size = getDriver().manage().window().getSize();
-        int width = size.width / 2;
-        int startY = (int) (size.height * 0.30);
-        int endY = (int) (size.height * 0.70);
-
-        try {
-            PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
-            Sequence swipe = new Sequence(finger, 1);
-
-            swipe.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), width, startY));
-            swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
-            swipe.addAction(finger.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), width, endY));
-            swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
-
-            getDriver().perform(List.of(swipe));
-        } catch (Exception e) {
-            System.out.println("Error while scrolling up: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Take screenshot and attach to Allure report
-     */
-    public void takeScreenShotAllureAttach(String screenshotname) {
-        Allure.addAttachment(screenshotname, new ByteArrayInputStream(getDriver().getScreenshotAs(OutputType.BYTES)));
-    }
-
-    /**
-     * Save balance to file
-     */
-    public void saveToFile(int balance, File BALANCE_FILE_PATH) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(BALANCE_FILE_PATH))) {
-            writer.write(String.valueOf(balance));
-            System.out.println("Balance saved to file successfully.");
-        } catch (IOException e) {
-            System.err.println("Error saving balance to file: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Read multiple values from file
-     */
-    public String[] readMultipleValues(String filePath) throws IOException {
-        StringBuilder content = new StringBuilder();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line);
+            previous = current;
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
             }
         }
-
-        return content.toString().split(",");  // Split into array
+        logger.warn("Screen did not become stable within {}s", timeoutSeconds);
     }
 
-    /**
-     * Wait for visibility of element
-     */
-    public void waitForVisibilityOfElement(By locator, int timeoutInSeconds) {
-        WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(timeoutInSeconds));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+    // ─── Find / Click ──────────────────────────────────────────────────────────
+
+    public WebElement findElement(By locator) {
+        ensureInitialized();
+        return driver.findElement(locator);
     }
 
-    /**
-     * Fluent wait and click on element
-     */
-    public void fluentWaitClickOnElement(By locator, int holdInSecond) {
-        FluentWait<AndroidDriver> wait = new FluentWait<>(getDriver())
-                .withTimeout(Duration.ofSeconds(holdInSecond))
+    public void click(By locator) {
+        waitForVisibility(locator).click();
+    }
+
+    public void safeClick(By locator) {
+        try {
+            click(locator);
+        } catch (Exception e) {
+            logger.warn("Retrying click: {}", locator);
+            fluentWaitClick(locator, 5);
+        }
+    }
+
+    public void fluentWaitClick(By locator, int timeoutSeconds) {
+        ensureInitialized();
+        new FluentWait<>(driver)
+                .withTimeout(Duration.ofSeconds(timeoutSeconds))
                 .pollingEvery(Duration.ofMillis(500))
-                .ignoring(org.openqa.selenium.NoSuchElementException.class);
-
-        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
-        element.click();
+                .ignoring(NoSuchElementException.class)
+                .ignoring(StaleElementReferenceException.class)
+                .until(d -> {
+                    WebElement el = d.findElement(locator);
+                    if (el.isDisplayed() && el.isEnabled()) {
+                        el.click();
+                        return true;
+                    }
+                    return false;
+                });
     }
 
-    /**
-     * Write two values to file (number and password)
-     */
-    public void writeToFileDoubleValue(File filePath, String number, String password) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false))) {
-            writer.write(number + "," + password);
-            writer.newLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void pressBack() {
+        ensureInitialized();
+        driver.navigate().back();
     }
 
-    /**
-     * Generate random password
-     */
-    public String generatePassword(int length) {
-        if (length < 8) {
-            length = 8; // Ensure minimum length of 8
-        }
-
-        String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+<>?";
-        SecureRandom random = new SecureRandom();
-        StringBuilder password = new StringBuilder();
-
-        for (int i = 0; i < length; i++) {
-            password.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
-        }
-
-        return password.toString();
-    }
+    // ─── Typing ────────────────────────────────────────────────────────────────
 
     /**
-     * Fluent wait for element visibility
+     * Taps the field, then types into the FOCUSED element. Re-locating by a positional
+     * XPath after the tap is unreliable in Flutter (the node tree shifts when the
+     * keyboard opens).
      */
-    public static void fluentWaitForElement(By locator, int timeoutInSeconds, int pollingTimeInMillis) {
-        Wait<AndroidDriver> wait = new FluentWait<>(getDriver())
-                .withTimeout(Duration.ofSeconds(timeoutInSeconds))
-                .pollingEvery(Duration.ofMillis(pollingTimeInMillis))
-                .ignoring(NoSuchElementException.class);
 
-        wait.until(driver -> {
-            WebElement element = getDriver().findElement(locator);
-            return (element.isDisplayed()) ? element : null;
-        });
-    }
+    // Taps the field and types into the focused element (no keyboard handling)
+    private void tapAndType(By locator, String text) {
+        waitForClickable(locator).click();
 
-    /**
-     * Check if element is visible within timeout
-     */
-    public boolean isElementVisible(By locator, int timeoutInSeconds) {
+        WebElement el;
         try {
-            WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(timeoutInSeconds));
-            wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            el = driver.switchTo().activeElement();
+            if (!"android.widget.EditText".equals(el.getAttribute("class"))) {
+                throw new NoSuchElementException("Focused element is not an input");
+            }
+        } catch (Exception e) {
+            el = new WebDriverWait(driver, Duration.ofSeconds(3))
+                    .until(ExpectedConditions.presenceOfElementLocated(locator));
+        }
+        el.sendKeys(text);
+    }
+
+    // Normal screens: type, then hide the keyboard
+    public void clickAndWrite(By locator, String text) {
+        tapAndType(locator, text);
+        hideKeyboardQuietly();
+    }
+
+    public void clickAndWriteInModal(By locator, String text) {
+        tapAndType(locator, text);
+    }
+
+    public void writeTextAndKeyboardHide(By locator, String text) {
+        WebElement element = waitForVisibility(locator);
+        element.clear();
+        element.sendKeys(text);
+        hideKeyboardQuietly();
+    }
+
+    // ─── Reading text ──────────────────────────────────────────────────────────
+
+    public String getText(By locator) {
+        return waitForVisibility(locator).getText();
+    }
+
+    /** Reads text; falls back to content-desc, then hint. */
+    public String getTextOrDesc(By locator) {
+        WebElement element = waitForVisibility(locator);
+
+        String value = safeAttribute(element, "text");
+        if (value.isEmpty()) value = safeAttribute(element, "content-desc");
+        if (value.isEmpty()) value = safeAttribute(element, "hint");
+        return value;
+    }
+
+    /** Returns the typed value; "" if the field is empty or only shows its hint. */
+    public String getFieldValue(By locator) {
+        WebElement el = waitForVisibility(locator);
+
+        String text = safeAttribute(el, "text");
+        String hint = safeAttribute(el, "hint");
+
+        if (text.isEmpty()) return "";
+        if (!hint.isEmpty() && text.equals(hint)) return ""; // placeholder, not user input
+        return text;
+    }
+
+    public boolean isFieldEmpty(By locator) {
+        return getFieldValue(locator).isEmpty();
+    }
+
+    // ─── Toast ─────────────────────────────────────────────────────────────────
+
+    public By toastByText(String message) {
+        return By.xpath("//android.widget.Toast[@text=\"" + message + "\"]");
+    }
+
+    public By toastContainingText(String partialMessage) {
+        return By.xpath("//android.widget.Toast[contains(@text,\"" + partialMessage + "\")]");
+    }
+
+    /** Toasts are not "visible" in the normal sense, so check presence. */
+    public boolean isToastDisplayed(String message, int timeoutSeconds) {
+        ensureInitialized();
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds))
+                    .until(ExpectedConditions.presenceOfElementLocated(toastByText(message)));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getToastText(int timeoutSeconds) {
+        ensureInitialized();
+        return new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds))
+                .until(ExpectedConditions.presenceOfElementLocated(By.xpath("//android.widget.Toast")))
+                .getAttribute("text");
+    }
+
+    // ─── Assertions ────────────────────────────────────────────────────────────
+
+    /** Hard assertion: stops the test immediately on failure. */
+    public void assertTextEquals(By locator, String expectedText) {
+        String actual = getTextOrDesc(locator);
+        logger.info("Hard assert | expected: [{}] | actual: [{}]", expectedText, actual);
+        Assert.assertEquals(actual, expectedText.trim(), "Text mismatch for locator: " + locator);
+    }
+
+    /** Soft assertion: records the failure; call assertAll() at the end of the test. */
+    public void softAssertTextEquals(By locator, String expectedText) {
+        String actual = getTextOrDesc(locator);
+        logger.info("Soft assert | expected: [{}] | actual: [{}]", expectedText, actual);
+        softAssert.assertEquals(actual, expectedText.trim(), "Text mismatch for locator: " + locator);
+    }
+
+    public void assertAll() {
+        try {
+            softAssert.assertAll();
+        } finally {
+            softAssert = new SoftAssert(); // reset: page objects are reused across tests
+        }
+    }
+
+    public boolean isElementGone(By locator, int timeoutSeconds) {
+        ensureInitialized();
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds)).until(d -> {
+                List<WebElement> els = d.findElements(locator);
+                if (els.isEmpty()) return true;
+                try {
+                    WebElement el = els.get(0);
+                    Rectangle r = el.getRect();
+                    return !el.isDisplayed() || r.getWidth() == 0 || r.getHeight() == 0;
+                } catch (StaleElementReferenceException e) {
+                    return true;
+                }
+            });
             return true;
         } catch (TimeoutException e) {
             return false;
         }
     }
 
-    /**
-     * Search in text field
-     */
-    public void searchTextField(By searchFieldLocator, String searchText) {
-        try {
-            WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(10));
-            WebElement searchField = wait.until(ExpectedConditions.elementToBeClickable(searchFieldLocator));
-
-            Thread.sleep(1000);
-            searchField.click();
-            searchField.clear();
-            searchField.sendKeys(searchText);
-        } catch (Exception e) {
-            System.out.println("Error interacting with search field: " + e.getMessage());
-        }
+    public void assertFieldEmpty(By locator, String fieldName) {
+        Assert.assertTrue(isFieldEmpty(locator), fieldName + " should be empty");
+        logInfo(fieldName + " is empty");
     }
 
-    /**
-     * Get text using content-desc attribute
-     */
-    public String getTextUsingAttribute(By locator) {
-        return findElement(locator).getAttribute("content-desc");
+    public void assertFieldNotEmpty(By locator, String fieldName) {
+        Assert.assertFalse(isFieldEmpty(locator), fieldName + " should contain the typed value");
     }
 
-    /**
-     * Validate password visibility with eye button
-     */
-    public void passwordEyeButtonValidation(By eyeButton, By passwordField, String password) throws InterruptedException {
-        Thread.sleep(3000);
-        fluentWaitClickOnElement(eyeButton, 10);
-        Thread.sleep(3000);
-        Assert.assertEquals(findElement(passwordField).getText(), password, "Password is not visible");
+    // ─── Scrolling ─────────────────────────────────────────────────────────────
+
+    public void scrollDown() {
+        scroll(0.7, 0.3);
     }
 
-    /**
-     * Allow media permissions
-     */
-    public void mediaPermissionAllower() {
-        waitForVisibilityOfElement(MEDIA_PERMISSION_ALLOW_ALL_BUTTON, 5);
-        findElement(MEDIA_PERMISSION_ALLOW_ALL_BUTTON).click();
+    public void scrollUp() {
+        scroll(0.3, 0.7);
     }
 
-    /**
-     * Assert toaster message
-     */
-    public void toasterMessageAssertion(By toasterLocator, String expectedMessage) {
-        Assert.assertTrue(isElementVisible(toasterLocator, 10), "Toaster message did not appear!");
-        Assert.assertEquals(findElement(toasterLocator).getAttribute("content-desc"), expectedMessage, "Toaster message did not match!");
-    }
+    private void scroll(double startRatio, double endRatio) {
+        ensureInitialized();
+        Dimension size = driver.manage().window().getSize();
+        int x = size.width / 2;
+        int startY = (int) (size.height * startRatio);
+        int endY = (int) (size.height * endRatio);
 
-    /**
-     * Soft assert text
-     */
-    public void assertText(By locator, String expected) {
-        waitForVisibilityOfElement(locator, 10);
-        softAssert.assertEquals(findElement(locator).getAttribute("content-desc"), expected, "Text did not match!");
-    }
-
-    /**
-     * Click random element and get its text
-     */
-    public String clickRandomElementAndGetText(By locator, int size) throws InterruptedException {
-        Thread.sleep(1000);
-        List<WebElement> elements = getDriver().findElements(locator);
-        if (!elements.isEmpty()) {
-            int randomIndex = new Random().nextInt(size);
-            WebElement selectedElement = elements.get(randomIndex);
-
-            String elementText = selectedElement.getAttribute("content-desc");
-            selectedElement.click();
-
-            return elementText;
-        } else {
-            throw new RuntimeException("No elements found for locator: " + locator.toString());
-        }
-    }
-
-    /**
-     * Normalize text by taking first line
-     */
-    public String normalizeText(String text) {
-        if (text == null || text.isEmpty()) {
-            return text;
-        }
-        return text.split("\n")[0].trim();
-    }
-
-    /**
-     * Tap by coordinates using W3C Actions
-     */
-    public void tapByCoordinates(int x, int y) {
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
-        Sequence tap = new Sequence(finger, 1);
+        Sequence swipe = new Sequence(finger, 1)
+                .addAction(finger.createPointerMove(Duration.ZERO,
+                        PointerInput.Origin.viewport(), x, startY))
+                .addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+                .addAction(finger.createPointerMove(Duration.ofMillis(600),
+                        PointerInput.Origin.viewport(), x, endY))
+                .addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
-        tap.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));
-        tap.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
-        tap.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
-
-        getDriver().perform(List.of(tap));
+        driver.perform(Collections.singletonList(swipe));
     }
 
-    /**
-     * Scroll up multiple times
-     */
-    public void scrollUpBlindly(int numberOfScrolls) throws InterruptedException {
-        for (int i = 0; i < numberOfScrolls; i++) {
-            scrollUp();
-            Thread.sleep(1000);
+    // ─── Screenshot ────────────────────────────────────────────────────────────
+
+    public void takeScreenshot(String name) {
+        ensureInitialized();
+        try {
+            Allure.addAttachment(name, "image/png",
+                    new ByteArrayInputStream(driver.getScreenshotAs(OutputType.BYTES)),
+                    "png");
+        } catch (Exception e) {
+            logger.error("Screenshot failed: {}", e.getMessage());
+        }
+    }
+    public  String generateRandomPin() {
+        Random random = new Random();
+
+        StringBuilder pin = new StringBuilder();
+
+        for (int i = 0; i < 5; i++) {
+            pin.append(random.nextInt(10)); // 0-9
+        }
+
+        return pin.toString();
+    }
+
+    public static void writeDataToFile(String filePath, String key, String value) {
+        try {
+            Map<String, String> data = new LinkedHashMap<>();
+
+            File file = new File(filePath);
+
+            if (file.exists()) {
+                List<String> lines = Files.readAllLines(Paths.get(filePath));
+
+                for (String line : lines) {
+                    if (line.contains("=")) {
+                        String[] parts = line.split("=", 2);
+                        data.put(parts[0].trim(), parts[1].trim());
+                    }
+                }
+            }
+
+// Add or update key
+            data.put(key, value);
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+                for (Map.Entry<String, String> entry : data.entrySet()) {
+                    writer.write(entry.getKey() + "=" + entry.getValue());
+                    writer.newLine();
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    /**
-     * Scroll down multiple times
-     */
-    public void scrollDownBlindly(int numberOfScrolls) throws InterruptedException {
-        for (int i = 0; i < numberOfScrolls; i++) {
-            scrollDown();
-            Thread.sleep(1000);
+    public static String readDataFromFile(String filePath, String key) {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(filePath));
+
+            for (String line : lines) {
+                if (line.contains("=")) {
+                    String[] parts = line.split("=", 2);
+
+                    if (parts[0].trim().equals(key)) {
+                        return parts[1].trim();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+        return null;
+    }
+
+    public void slideToCheckIn(By locator) {
+        WebElement slider = new WebDriverWait(driver, Duration.ofSeconds(15))
+                .until(ExpectedConditions.visibilityOfElementLocated(locator));
+
+        Rectangle r = slider.getRect();
+        Dimension screen = driver.manage().window().getSize();
+
+        int y      = r.getY() + r.getHeight() / 2;
+        int startX = r.getX() + r.getHeight() / 2;   // round handle on the left
+        int endX   = screen.getWidth() - 5;          // overshoot to the screen edge
+
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+        Sequence swipe = new Sequence(finger, 0);
+
+        swipe.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, y));
+        swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        swipe.addAction(new Pause(finger, Duration.ofMillis(300)));
+
+        // many small moves so Flutter receives continuous drag events
+        int steps = 20;
+        for (int i = 1; i <= steps; i++) {
+            int x = startX + (endX - startX) * i / steps;
+            swipe.addAction(finger.createPointerMove(Duration.ofMillis(40), PointerInput.Origin.viewport(), x, y));
+        }
+
+        swipe.addAction(new Pause(finger, Duration.ofMillis(200)));   // hold at the end
+        swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+        driver.perform(Arrays.asList(swipe));
+    }
+
+    public void slideToCheckInV2(By locator) {
+        WebElement slider = new WebDriverWait(driver, Duration.ofSeconds(15))
+                .until(ExpectedConditions.visibilityOfElementLocated(locator));
+        Rectangle r = slider.getRect();
+
+        ((JavascriptExecutor) driver).executeScript("mobile: dragGesture", java.util.Map.of(
+                "startX", r.getX() + r.getHeight() / 2,
+                "startY", r.getY() + r.getHeight() / 2,
+                "endX",   r.getX() + r.getWidth() - 10,
+                "endY",   r.getY() + r.getHeight() / 2,
+                "speed",  500
+        ));
     }
 }
