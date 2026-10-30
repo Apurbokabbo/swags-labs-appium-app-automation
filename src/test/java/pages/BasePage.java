@@ -1,5 +1,4 @@
 package pages;
-import io.github.cdimascio.dotenv.Dotenv;
 import io.qameta.allure.Allure;
 import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.*;
