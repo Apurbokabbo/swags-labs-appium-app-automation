@@ -25,10 +25,10 @@ public class LoginPage extends BasePage {
    public By password_info_text_locator = By.xpath("//android.widget.ScrollView[@content-desc=\"test-Login\"]/android.view.ViewGroup/android.view.ViewGroup[4]/android.widget.TextView[2]");
    public By user_name_info_text_locator = By.xpath("//android.widget.ScrollView[@content-desc=\"test-Login\"]/android.view.ViewGroup/android.view.ViewGroup[4]/android.widget.TextView[1]");
 
-    public void loginWithValidCredentials(String userName, String password) {
-        writeText(user_name_input_field, userName);
-        writeText(password_input_field, password);
-        fluentWaitClickOnElement(login_button, 4);
-        isElementVisible(menu_button,10);
-    }
+//    public void loginWithValidCredentials(String userName, String password) {
+//        writeText(user_name_input_field, userName);
+//        writeText(password_input_field, password);
+//        fluentWaitClickOnElement(login_button, 4);
+//        isElementVisible(menu_button,10);
+//    }
 }
