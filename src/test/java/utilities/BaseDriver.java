@@ -23,7 +23,7 @@ import java.util.Properties;
 
 public class BaseDriver {
 
-    private static final String DEVICE = System.getProperty("device", "Motorola");
+    private static final String DEVICE = System.getProperty("device", "redmi_note");
     private static final String CAPABILITIES_FILE_PATH = "src/test/resources/capabilities_" + DEVICE + ".properties";
     private static final ThreadLocal<AndroidDriver> DRIVER_THREAD_LOCAL = new ThreadLocal<>();
 
