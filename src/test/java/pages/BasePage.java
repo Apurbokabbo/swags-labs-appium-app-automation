@@ -1,5 +1,6 @@
 package pages;
 
+import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.qameta.allure.Allure;
 import org.openqa.selenium.*;
@@ -387,6 +388,46 @@ public class BasePage extends CommonLocators {
                 .addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
         driver.perform(Collections.singletonList(swipe));
+    }
+
+    // ─── Collections / scrolling helpers ───────────────────────────────────────
+
+    public List<WebElement> findElements(By locator) {
+        ensureInitialized();
+        return driver.findElements(locator);
+    }
+
+    /** Scrolls the first scrollable view until an element with this exact text is on screen. */
+    public void scrollToText(String text) {
+        ensureInitialized();
+        String safe = text.replace("\\", "\\\\").replace("\"", "\\\"");
+        driver.findElement(AppiumBy.androidUIAutomator(
+                "new UiScrollable(new UiSelector().scrollable(true).instance(0))"
+                        + ".scrollIntoView(new UiSelector().text(\"" + safe + "\"))"));
+    }
+
+    /** Swipes down (up to maxSwipes) until the locator is visible. */
+    public boolean scrollUntilVisible(By locator, int maxSwipes) {
+        for (int i = 0; i <= maxSwipes; i++) {
+            if (isElementVisible(locator, 1)) return true;
+            if (i < maxSwipes) scrollDown();
+        }
+        return false;
+    }
+
+    public void assertVisible(By locator, String elementName) {
+        Assert.assertTrue(isElementVisible(locator, 10), elementName + " should be visible");
+    }
+
+    /** Cart badge number shown in the header; 0 when the badge is not shown. */
+    public int getCartBadgeCount() {
+        List<WebElement> badge = findElements(cart_badge);
+        if (badge.isEmpty()) return 0;
+        try {
+            return Integer.parseInt(badge.get(0).getText().trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     // ─── Screenshot ────────────────────────────────────────────────────────────
