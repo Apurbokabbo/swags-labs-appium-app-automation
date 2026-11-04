@@ -8,14 +8,14 @@ import utilities.TestData;
 public class LoginPage extends BasePage {
 
     // ── Expected texts ────────────────────────────────────────────────────────
-    public  final String USERNAME_PLACEHOLDER   = "Username";
-    public  final String PASSWORD_PLACEHOLDER   = "Password";
-    public  final String USERNAME_INFO_TEXT     = "The currently accepted usernames for this application are (tap to autofill):";
-    public  final String PASSWORD_INFO_TEXT     = "And the password for all users is:";
-    public  final String USERNAME_REQUIRED      = "Username is required";
-    public  final String PASSWORD_REQUIRED      = "Password is required";
-    public  final String INVALID_CREDENTIALS    = "Username and password do not match any user in this service";
-    public  final String LOCKED_OUT             = "Sorry, this user has been locked out.";
+    public static final String USERNAME_PLACEHOLDER   = "Username";
+    public static final String PASSWORD_PLACEHOLDER   = "Password";
+    public static final String USERNAME_INFO_TEXT     = "The currently accepted usernames for this application are (tap to autofill):";
+    public static final String PASSWORD_INFO_TEXT     = "And the password for all users is:";
+    public static final String USERNAME_REQUIRED      = "Username is required";
+    public static final String PASSWORD_REQUIRED      = "Password is required";
+    public static final String INVALID_CREDENTIALS    = "Username and password do not match any user in this service";
+    public static final String LOCKED_OUT             = "Sorry, this user has been locked out.";
 
     // ── Locators (accessibility id is faster and more stable than XPath) ──────
     private final By usernameInput    = AppiumBy.accessibilityId("test-Username");
