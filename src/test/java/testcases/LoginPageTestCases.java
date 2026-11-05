@@ -20,15 +20,13 @@ public class LoginPageTestCases extends BaseDriver {
     private final LoginPage loginPage = new LoginPage();
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 1, description = "Login page shows username, password and login button",
-            groups = {"regression", "smoke"})
+    @Test(priority = 1, description = "Login page shows username, password and login button", groups = {"regression", "smoke"})
     public void loginPageAppearanceTest() {
         Assert.assertTrue(loginPage.isLoaded(), "Login page did not load all key elements");
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 2, description = "Login page placeholders and info texts are correct",
-            groups = {"regression"})
+    @Test(priority = 2, description = "Login page placeholders and info texts are correct", groups = {"regression"})
     public void loginPageTextAssertionTest() {
         Assert.assertTrue(loginPage.isLoaded(), "Login page did not load");
 
@@ -41,8 +39,7 @@ public class LoginPageTestCases extends BaseDriver {
     }
 
     @Severity(SeverityLevel.BLOCKER)
-    @Test(priority = 3, description = "Standard user can log in with valid credentials",
-            groups = {"regression", "smoke"})
+    @Test(priority = 3, description = "Standard user can log in with valid credentials", groups = {"regression", "smoke"})
     public void validLoginTest() {
         loginPage.login(TestData.standardUser(), TestData.password());
 

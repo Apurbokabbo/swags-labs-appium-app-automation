@@ -29,13 +29,13 @@ public class LoginPage extends BasePage {
 
     // ── State checks ──────────────────────────────────────────────────────────
     public boolean isLoaded() {
-        return isElementVisible(usernameInput, 15)
-                && isElementVisible(passwordInput, 5)
-                && isElementVisible(loginButton, 5);
+        return isElementVisible(usernameInput, small_wait)
+                && isElementVisible(passwordInput, small_wait)
+                && isElementVisible(loginButton, small_wait);
     }
 
     public boolean isErrorDisplayed() {
-        return isElementVisible(errorMessage, 5);
+        return isElementVisible(errorMessage, small_wait);
     }
 
     // ── Reading ───────────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ public class LoginPage extends BasePage {
     public boolean isPasswordEmpty()       { return isFieldEmpty(passwordInput); }
 
     public String getErrorMessage() {
+
         return getText(errorMessage);
     }
 
@@ -63,7 +64,7 @@ public class LoginPage extends BasePage {
     public void login(String username, String password) {
         if (username != null && !username.isEmpty()) clickAndWrite(usernameInput, username);
         if (password != null && !password.isEmpty()) clickAndWrite(passwordInput, password);
-        click(loginButton);
+        fluentWaitClick(loginButton,small_wait);
     }
 
     @Step("Login as standard user")
