@@ -66,6 +66,7 @@ public class BasePage extends CommonLocators {
 
     /** Treats null, empty and the literal string "null" (returned by UiAutomator2) as blank. */
     private boolean isBlank(String s) {
+
         return s == null || s.trim().isEmpty() || s.trim().equalsIgnoreCase("null");
     }
 
@@ -106,10 +107,6 @@ public class BasePage extends CommonLocators {
         return wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
 
-    public void waitForInvisibility(By locator) {
-        ensureInitialized();
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
-    }
 
     public boolean isElementVisible(By locator, int timeoutSeconds) {
         try {
@@ -134,7 +131,7 @@ public class BasePage extends CommonLocators {
     /** Waits until every given element is visible (anchors of a loaded screen). */
     public void waitForScreenLoaded(By... keyElements) {
         for (By locator : keyElements) {
-            waitForVisibility(locator, 15);
+            waitForVisibility(locator, small_wait);
         }
     }
 
@@ -171,6 +168,7 @@ public class BasePage extends CommonLocators {
     }
 
     public void click(By locator) {
+
         waitForVisibility(locator).click();
     }
 
@@ -179,7 +177,7 @@ public class BasePage extends CommonLocators {
             click(locator);
         } catch (Exception e) {
             logger.warn("Retrying click: {}", locator);
-            fluentWaitClick(locator, 5);
+            fluentWaitClick(locator, small_wait);
         }
     }
 
@@ -237,6 +235,7 @@ public class BasePage extends CommonLocators {
     }
 
     public void clickAndWriteInModal(By locator, String text) {
+
         tapAndType(locator, text);
     }
 
@@ -276,12 +275,14 @@ public class BasePage extends CommonLocators {
     }
 
     public boolean isFieldEmpty(By locator) {
+
         return getFieldValue(locator).isEmpty();
     }
 
     // ─── Toast ─────────────────────────────────────────────────────────────────
 
     public By toastByText(String message) {
+
         return By.xpath("//android.widget.Toast[@text=\"" + message + "\"]");
     }
 
@@ -364,10 +365,12 @@ public class BasePage extends CommonLocators {
     // ─── Scrolling ─────────────────────────────────────────────────────────────
 
     public void scrollDown() {
+
         scroll(0.7, 0.3);
     }
 
     public void scrollUp() {
+
         scroll(0.3, 0.7);
     }
 
@@ -506,48 +509,4 @@ public class BasePage extends CommonLocators {
         return null;
     }
 
-    public void slideToCheckIn(By locator) {
-        WebElement slider = new WebDriverWait(driver, Duration.ofSeconds(15))
-                .until(ExpectedConditions.visibilityOfElementLocated(locator));
-
-        Rectangle r = slider.getRect();
-        Dimension screen = driver.manage().window().getSize();
-
-        int y      = r.getY() + r.getHeight() / 2;
-        int startX = r.getX() + r.getHeight() / 2;   // round handle on the left
-        int endX   = screen.getWidth() - 5;          // overshoot to the screen edge
-
-        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
-        Sequence swipe = new Sequence(finger, 0);
-
-        swipe.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, y));
-        swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
-        swipe.addAction(new Pause(finger, Duration.ofMillis(300)));
-
-        // many small moves so Flutter receives continuous drag events
-        int steps = 20;
-        for (int i = 1; i <= steps; i++) {
-            int x = startX + (endX - startX) * i / steps;
-            swipe.addAction(finger.createPointerMove(Duration.ofMillis(40), PointerInput.Origin.viewport(), x, y));
-        }
-
-        swipe.addAction(new Pause(finger, Duration.ofMillis(200)));   // hold at the end
-        swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
-
-        driver.perform(Arrays.asList(swipe));
-    }
-
-    public void slideToCheckInV2(By locator) {
-        WebElement slider = new WebDriverWait(driver, Duration.ofSeconds(15))
-                .until(ExpectedConditions.visibilityOfElementLocated(locator));
-        Rectangle r = slider.getRect();
-
-        ((JavascriptExecutor) driver).executeScript("mobile: dragGesture", java.util.Map.of(
-                "startX", r.getX() + r.getHeight() / 2,
-                "startY", r.getY() + r.getHeight() / 2,
-                "endX",   r.getX() + r.getWidth() - 10,
-                "endY",   r.getY() + r.getHeight() / 2,
-                "speed",  500
-        ));
-    }
 }
