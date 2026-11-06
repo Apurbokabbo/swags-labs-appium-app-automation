@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="LPG Gas Test Suite">
+<suite name="Swag Labs Mobile Suite">
+
+    <listeners>
+        <listener class-name="utilities.TestListener"/>
+    </listeners>
 
     <!-- All Regression Tests -->
     <test name="Regression Tests">
@@ -10,9 +14,12 @@
             </run>
         </groups>
         <classes>
-
             <class name="testcases.LoginPageTestCases"/>
-
+            <class name="testcases.ProductsPageTestCases"/>
+            <class name="testcases.ProductDetailsTestCases"/>
+            <class name="testcases.CartPageTestCases"/>
+            <class name="testcases.CheckoutTestCases"/>
+            <class name="testcases.MenuTestCases"/>
         </classes>
     </test>
 </suite>
