@@ -16,6 +16,7 @@ public abstract class AuthenticatedTest extends BaseDriver {
 
     @BeforeMethod(alwaysRun = true)
     public void loginAsStandardUser() {
+
         productsPage = loginPage.loginAsStandardUser();
     }
 }
