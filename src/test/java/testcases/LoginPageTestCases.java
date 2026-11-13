@@ -48,8 +48,7 @@ public class LoginPageTestCases extends BaseDriver {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 4, description = "Locked out user sees the locked-out error",
-            groups = {"regression", "smoke"})
+    @Test(priority = 4, description = "Locked out user sees the locked-out error", groups = {"regression", "smoke"})
     public void lockedOutUserTest() {
         loginPage.login(TestData.lockedOutUser(), TestData.password());
 

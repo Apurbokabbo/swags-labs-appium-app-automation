@@ -18,8 +18,7 @@ import java.util.HashSet;
 public class CartPageTestCases extends AuthenticatedTest {
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 1, description = "Empty cart has no items and Continue Shopping works",
-            groups = {"regression"})
+    @Test(priority = 1, description = "Empty cart has no items and Continue Shopping works", groups = {"regression"})
     public void emptyCartTest() {
         CartPage cart = productsPage.openCart();
 

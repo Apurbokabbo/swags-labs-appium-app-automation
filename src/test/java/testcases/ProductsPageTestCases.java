@@ -21,8 +21,7 @@ import java.util.stream.Collectors;
 public class ProductsPageTestCases extends AuthenticatedTest {
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 1, description = "Products page shows header controls",
-            groups = {"regression", "smoke"})
+    @Test(priority = 1, description = "Products page shows header controls", groups = {"regression", "smoke"})
     public void productsPageAppearanceTest() {
         SoftAssert soft = new SoftAssert();
         soft.assertTrue(productsPage.isLoaded(), "PRODUCTS title");
@@ -34,8 +33,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 2, description = "All 6 expected products are listed",
-            groups = {"regression"})
+    @Test(priority = 2, description = "All 6 expected products are listed", groups = {"regression"})
     public void allProductsListedTest() {
         List<String> expected = Arrays.stream(Product.values()).map(Product::displayName).collect(Collectors.toList());
         List<String> actual = productsPage.getAllProductNames();
@@ -44,8 +42,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 3, description = "Adding one product updates the cart badge and swaps ADD with REMOVE",
-            groups = {"regression", "smoke"})
+    @Test(priority = 3, description = "Adding one product updates the cart badge and swaps ADD with REMOVE", groups = {"regression", "smoke"})
     public void addSingleProductTest() {
         productsPage.addToCart(Product.BACKPACK);
 
@@ -56,8 +53,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 4, description = "Adding several products increments the cart badge",
-            groups = {"regression"})
+    @Test(priority = 4, description = "Adding several products increments the cart badge", groups = {"regression"})
     public void addMultipleProductsTest() {
         productsPage.addToCart(Product.BACKPACK)
                 .addToCart(Product.BIKE_LIGHT)
@@ -67,8 +63,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 5, description = "Removing a product from the list clears the badge",
-            groups = {"regression"})
+    @Test(priority = 5, description = "Removing a product from the list clears the badge", groups = {"regression"})
     public void removeProductFromListTest() {
         productsPage.addToCart(Product.BACKPACK);
         productsPage.removeFromCart(Product.BACKPACK);
@@ -80,8 +75,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 6, description = "Sort by name Z to A, then A to Z",
-            groups = {"regression"})
+    @Test(priority = 6, description = "Sort by name Z to A, then A to Z", groups = {"regression"})
     public void sortByNameTest() {
         List<String> ascending = Arrays.stream(Product.values()).map(Product::displayName).sorted().collect(Collectors.toList());
         List<String> descending = new ArrayList<>(ascending);
@@ -96,8 +90,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 7, description = "Sort by price low to high and high to low",
-            groups = {"regression"})
+    @Test(priority = 7, description = "Sort by price low to high and high to low", groups = {"regression"})
     public void sortByPriceTest() {
         productsPage.sortBy(SortOption.PRICE_LOW_HIGH);
         List<Double> low = prices(productsPage.getAllProductNames());
