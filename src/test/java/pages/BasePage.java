@@ -135,31 +135,6 @@ public class BasePage extends CommonLocators {
         }
     }
 
-    /** Waits until the page source stops changing (UI finished loading). */
-    public void waitForScreenStable(int timeoutSeconds) {
-        ensureInitialized();
-        String previous = "";
-        int stableCount = 0;
-        long end = System.currentTimeMillis() + timeoutSeconds * 1000L;
-
-        while (System.currentTimeMillis() < end) {
-            String current = driver.getPageSource();
-            if (current.equals(previous)) {
-                if (++stableCount >= 2) return; // unchanged twice in a row = loaded
-            } else {
-                stableCount = 0;
-            }
-            previous = current;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-        }
-        logger.warn("Screen did not become stable within {}s", timeoutSeconds);
-    }
-
     // ─── Find / Click ──────────────────────────────────────────────────────────
 
     public WebElement findElement(By locator) {
@@ -234,10 +209,6 @@ public class BasePage extends CommonLocators {
         hideKeyboardQuietly();
     }
 
-    public void clickAndWriteInModal(By locator, String text) {
-
-        tapAndType(locator, text);
-    }
 
     public void writeTextAndKeyboardHide(By locator, String text) {
         WebElement element = waitForVisibility(locator);
