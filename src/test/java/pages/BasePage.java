@@ -257,9 +257,6 @@ public class BasePage extends CommonLocators {
         return By.xpath("//android.widget.Toast[@text=\"" + message + "\"]");
     }
 
-    public By toastContainingText(String partialMessage) {
-        return By.xpath("//android.widget.Toast[contains(@text,\"" + partialMessage + "\")]");
-    }
 
     /** Toasts are not "visible" in the normal sense, so check presence. */
     public boolean isToastDisplayed(String message, int timeoutSeconds) {
@@ -324,10 +321,6 @@ public class BasePage extends CommonLocators {
         }
     }
 
-    public void assertFieldEmpty(By locator, String fieldName) {
-        Assert.assertTrue(isFieldEmpty(locator), fieldName + " should be empty");
-        logInfo(fieldName + " is empty");
-    }
 
     public void assertFieldNotEmpty(By locator, String fieldName) {
         Assert.assertFalse(isFieldEmpty(locator), fieldName + " should contain the typed value");
@@ -416,17 +409,7 @@ public class BasePage extends CommonLocators {
             logger.error("Screenshot failed: {}", e.getMessage());
         }
     }
-    public  String generateRandomPin() {
-        Random random = new Random();
 
-        StringBuilder pin = new StringBuilder();
-
-        for (int i = 0; i < 5; i++) {
-            pin.append(random.nextInt(10)); // 0-9
-        }
-
-        return pin.toString();
-    }
 
     public static void writeDataToFile(String filePath, String key, String value) {
         try {
