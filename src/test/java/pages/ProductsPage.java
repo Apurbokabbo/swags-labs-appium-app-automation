@@ -3,13 +3,17 @@ package pages;
 import io.appium.java_client.AppiumBy;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.RemoteWebElement;
 import utilities.Product;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ProductsPage extends BasePage {
 
@@ -20,12 +24,19 @@ public class ProductsPage extends BasePage {
         PRICE_HIGH_LOW("Price (high to low)");
 
         private final String label;
+
         SortOption(String label) { this.label = label; }
+
         public String label() { return label; }
     }
 
     private static final String ADD_DESC    = "test-ADD TO CART";
     private static final String REMOVE_DESC = "test-REMOVE";
+
+    /** Run with -Ddebug=true to print what the list scrolling sees. */
+    private static final boolean DEBUG = Boolean.getBoolean("debug");
+
+    private static final int MAX_SCROLL_PASSES = 15;
 
     private final By screenTitle   = By.xpath("//android.widget.TextView[@text=\"PRODUCTS\"]");
     private final By productTitles = AppiumBy.accessibilityId("test-Item title");
@@ -37,7 +48,7 @@ public class ProductsPage extends BasePage {
         return By.xpath("//android.widget.TextView[@content-desc=\"test-Item title\" and @text=\"" + name + "\"]");
     }
 
-    /** Finds the button (ADD TO CART / REMOVE) that belongs to the same card as the product title. */
+    /** The button (ADD TO CART / REMOVE) that belongs to the same card as the product title. */
     private By productButton(String name, String buttonDesc) {
         return By.xpath("//android.widget.TextView[@content-desc=\"test-Item title\" and @text=\"" + name + "\"]"
                 + "/ancestor::android.view.ViewGroup[.//android.view.ViewGroup[@content-desc=\"" + buttonDesc + "\"]][1]"
@@ -79,21 +90,75 @@ public class ProductsPage extends BasePage {
     }
 
     // ── Reading ───────────────────────────────────────────────────────────────
-    /** Scrolls through the (virtualised) list and returns every product name in on-screen order. */
+
+    /**
+     * Scrolls the (lazily rendered) list from top to bottom and returns every
+     * product name in on-screen order.
+     */
     public List<String> getAllProductNames() {
         Set<String> names = new LinkedHashSet<>();
-        int rounds = 0;
-        int noNewItemRounds = 0;
-        while (rounds++ < 10 && noNewItemRounds < 2) {
+
+        scrollListToTop();
+
+        int pass = 0;
+        int passesWithoutNewItems = 0;
+        boolean canScrollMore;
+        do {
             int before = names.size();
-            for (WebElement el : findElements(productTitles)) {
-                String text = el.getText();
-                if (text != null && !text.trim().isEmpty()) names.add(text.trim());
-            }
-            noNewItemRounds = (names.size() == before) ? noNewItemRounds + 1 : 0;
-            scrollDown();
-        }
+            collectVisibleProductNames(names);
+            passesWithoutNewItems = (names.size() == before) ? passesWithoutNewItems + 1 : 0;
+
+            canScrollMore = scrollList("down", 0.5);
+            pause(700); // let the list render the newly revealed cards
+            debug("pass " + (++pass) + " canScrollMore=" + canScrollMore + " names=" + names);
+        } while (canScrollMore && passesWithoutNewItems < 3 && pass < MAX_SCROLL_PASSES);
+
+        collectVisibleProductNames(names); // last screen after the final scroll
+        debug("FINAL names=" + names);
         return new ArrayList<>(names);
+    }
+
+    private void collectVisibleProductNames(Set<String> names) {
+        for (WebElement el : findElements(productTitles)) {
+            String text = el.getText();
+            if (text != null && !text.trim().isEmpty()) {
+                names.add(text.trim());
+            }
+        }
+    }
+
+    private void scrollListToTop() {
+        for (int i = 0; i < 5 && scrollList("up", 1.0); i++) {
+            pause(300);
+        }
+    }
+
+    /** Native scroll of the real list view; returns true if it can still scroll in that direction. */
+    private boolean scrollList(String direction, double percent) {
+        ensureInitialized();
+        try {
+            WebElement list = driver.findElement(AppiumBy.androidUIAutomator(
+                    "new UiSelector().scrollable(true).instance(0)"));
+            Object result = driver.executeScript("mobile: scrollGesture", Map.of(
+                    "elementId", ((RemoteWebElement) list).getId(),
+                    "direction", direction,
+                    "percent", percent));
+            return Boolean.TRUE.equals(result);
+        } catch (NoSuchElementException e) {
+            return false; // nothing scrollable on screen
+        }
+    }
+
+    private void pause(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void debug(String message) {
+        if (DEBUG) System.out.println("[ProductsPage] " + message);
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -139,5 +204,18 @@ public class ProductsPage extends BasePage {
     public MenuPage openMenu() {
         click(menu_button);
         return new MenuPage();
+    }
+
+    // ── Sort-check helpers ────────────────────────────────────────────────────
+    // Two products cost 15.99, so compare prices (not names) to avoid tie-order flakiness.
+    public List<Double> prices(List<String> names) {
+        return names.stream().map(n -> Product.fromName(n).price()).collect(Collectors.toList());
+    }
+
+    public boolean isNonDecreasing(List<Double> values) {
+        for (int i = 1; i < values.size(); i++) {
+            if (values.get(i) < values.get(i - 1)) return false;
+        }
+        return true;
     }
 }

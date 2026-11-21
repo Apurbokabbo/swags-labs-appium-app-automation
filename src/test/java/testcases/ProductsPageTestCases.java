@@ -84,7 +84,9 @@ public class ProductsPageTestCases extends AuthenticatedTest {
         // Z-A first: A-Z is the default order, so testing it alone could never fail
         productsPage.sortBy(SortOption.NAME_DESC);
         Assert.assertEquals(productsPage.getAllProductNames(), descending, "Name (Z to A)");
-
+        productsPage.scrollUp(); // again go to top
+        productsPage.scrollUp();
+        productsPage.scrollUp();
         productsPage.sortBy(SortOption.NAME_ASC);
         Assert.assertEquals(productsPage.getAllProductNames(), ascending, "Name (A to Z)");
     }
@@ -93,26 +95,18 @@ public class ProductsPageTestCases extends AuthenticatedTest {
     @Test(priority = 7, description = "Sort by price low to high and high to low", groups = {"regression"})
     public void sortByPriceTest() {
         productsPage.sortBy(SortOption.PRICE_LOW_HIGH);
-        List<Double> low = prices(productsPage.getAllProductNames());
+        List<Double> low = productsPage.prices(productsPage.getAllProductNames());
         Assert.assertEquals(low.size(), Product.values().length, "All products listed");
-        Assert.assertTrue(isNonDecreasing(low), "Price (low to high) but got " + low);
-
+        Assert.assertTrue(productsPage.isNonDecreasing(low), "Price (low to high) but got " + low);
+        productsPage.scrollUp(); // again go to top
+        productsPage.scrollUp();
+        productsPage.scrollUp();
         productsPage.sortBy(SortOption.PRICE_HIGH_LOW);
-        List<Double> high = prices(productsPage.getAllProductNames());
+        List<Double> high = productsPage.prices(productsPage.getAllProductNames());
         List<Double> reversed = new ArrayList<>(high);
         java.util.Collections.reverse(reversed);
-        Assert.assertTrue(isNonDecreasing(reversed), "Price (high to low) but got " + high);
+        Assert.assertTrue(productsPage.isNonDecreasing(reversed), "Price (high to low) but got " + high);
     }
 
-    // Two products cost 15.99, so compare prices (not names) to avoid tie-order flakiness.
-    private List<Double> prices(List<String> names) {
-        return names.stream().map(n -> Product.fromName(n).price()).collect(Collectors.toList());
-    }
 
-    private boolean isNonDecreasing(List<Double> values) {
-        for (int i = 1; i < values.size(); i++) {
-            if (values.get(i) < values.get(i - 1)) return false;
-        }
-        return true;
-    }
 }
