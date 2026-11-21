@@ -39,10 +39,18 @@ public class LoginPage extends BasePage {
     }
 
     // ── Reading ───────────────────────────────────────────────────────────────
-    public String getUsernamePlaceholder() { return getTextOrDesc(usernameInput); }
-    public String getPasswordPlaceholder() { return getTextOrDesc(passwordInput); }
-    public String getUsernameValue()       { return getFieldValue(usernameInput); }
-    public boolean isPasswordEmpty()       { return isFieldEmpty(passwordInput); }
+    public String getUsernamePlaceholder() {
+        return getTextOrDesc(usernameInput);
+    }
+    public String getPasswordPlaceholder() {
+        return getTextOrDesc(passwordInput);
+    }
+    public String getUsernameValue() {
+        return getFieldValue(usernameInput);
+    }
+    public boolean isPasswordEmpty() {
+        return isFieldEmpty(passwordInput);
+    }
 
     public String getErrorMessage() {
 

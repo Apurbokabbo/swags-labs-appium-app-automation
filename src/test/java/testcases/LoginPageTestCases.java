@@ -74,17 +74,16 @@ public class LoginPageTestCases extends BaseDriver {
     public void invalidLoginTest(String username, String password, String expectedError) {
         loginPage.login(username, password);
 
-        Assert.assertEquals(loginPage.getErrorMessage(), expectedError,
-                "Wrong error for username=[" + username + "] password=[" + password + "]");
+        Assert.assertEquals(loginPage.getErrorMessage(), expectedError, "Wrong error for username=[" + username + "] password=[" + password + "]");
     }
 
     @Severity(SeverityLevel.MINOR)
-    @Test(priority = 6, description = "Tapping the standard_user hint autofills the form",
-            groups = {"regression"})
+    @Test(priority = 6, description = "Tapping the standard_user hint autofills the form", groups = {"regression"})
     public void autofillStandardUserTest() {
         loginPage.tapStandardUserHint();
 
         SoftAssert soft = new SoftAssert();
+        loginPage.scrollUp();
         soft.assertEquals(loginPage.getUsernameValue(), TestData.standardUser(), "Username autofill");
         soft.assertFalse(loginPage.isPasswordEmpty(), "Password should be autofilled");
         soft.assertAll();
