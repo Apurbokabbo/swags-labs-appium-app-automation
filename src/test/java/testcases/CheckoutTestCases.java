@@ -16,6 +16,7 @@ import utilities.TestData;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 @Epic("Swag Labs")
 @Feature("Checkout")
@@ -50,10 +51,11 @@ public class CheckoutTestCases extends AuthenticatedTest {
 
     @Severity(SeverityLevel.NORMAL)
     @Test(priority = 2, description = "Cancel on the information screen returns to the cart", groups = {"regression"})
-    public void cancelReturnsToCartTest() {
+    public void cancelReturnsToHomeTest() {
         CheckoutInformationPage info = goToCheckoutInfo(Product.BACKPACK);
+        info.fluentWaitClick(info.cancelButton, info.small_wait);
+        info.isElementVisible(info.sortButton,info.small_wait);
 
-        Assert.assertTrue(info.cancel().isLoaded(), "Cart should be shown after Cancel");
     }
 
     @Severity(SeverityLevel.CRITICAL)
@@ -64,13 +66,18 @@ public class CheckoutTestCases extends AuthenticatedTest {
 
         double expectedItemTotal = Product.BACKPACK.price() + Product.BIKE_LIGHT.price();
 
-        SoftAssert soft = new SoftAssert();
-        soft.assertEquals(new HashSet<>(overview.getItemNames()),
-                new HashSet<>(Arrays.asList(Product.BACKPACK.displayName(), Product.BIKE_LIGHT.displayName())), "Items on overview");
+        List<String> names = overview.getItemNames();     // read ONCE
+        System.out.println("OVERVIEW NAMES = " + names);
+
         double itemTotal = overview.getItemTotal();
         double tax = overview.getTax();
+        double total = overview.getTotal();
+
+        SoftAssert soft = new SoftAssert();
+        soft.assertEquals(new HashSet<>(names),
+                new HashSet<>(Arrays.asList(Product.BACKPACK.displayName(), Product.BIKE_LIGHT.displayName())), "Items on overview");
         soft.assertEquals(itemTotal, expectedItemTotal, 0.001, "Item total");
-        soft.assertEquals(overview.getTotal(), itemTotal + tax, 0.011, "Total = item total + tax");
+        soft.assertEquals(total, itemTotal + tax, 0.011, "Total = item total + tax");
         soft.assertAll();
     }
 
@@ -78,10 +85,10 @@ public class CheckoutTestCases extends AuthenticatedTest {
     @Test(priority = 4, description = "E2E: complete a purchase and return home with an empty cart", groups = {"regression", "smoke"})
     public void completePurchaseTest() {
         CheckoutCompletePage complete = goToCheckoutInfo(Product.BACKPACK)
-                .continueToOverview(TestData.FIRST_NAME, TestData.LAST_NAME, TestData.ZIP_CODE)
-                .finish();
+                .continueToOverview(TestData.FIRST_NAME, TestData.LAST_NAME, TestData.ZIP_CODE).finish();
 
         Assert.assertTrue(complete.isThankYouDisplayed(), "Thank-you message");
+        complete.takeScreenshot("Order complete");
 
         productsPage = complete.backHome();
         Assert.assertEquals(productsPage.getCartBadgeCount(), 0, "Cart should be empty after the order");

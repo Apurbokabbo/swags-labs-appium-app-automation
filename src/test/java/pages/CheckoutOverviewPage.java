@@ -4,9 +4,12 @@ import io.appium.java_client.AppiumBy;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import utilities.Product;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CheckoutOverviewPage extends BasePage {
 
@@ -18,30 +21,40 @@ public class CheckoutOverviewPage extends BasePage {
     private final By finishButton = AppiumBy.accessibilityId("test-FINISH");
 
     public void waitUntilLoaded() {
+
         waitForVisibility(screenTitle, 15);
     }
 
     public boolean isLoaded() {
+
         return isElementVisible(screenTitle, 10);
     }
 
     public List<String> getItemNames() {
-        List<String> names = new ArrayList<>();
-        for (WebElement el : findElements(itemTitles)) {
-            String text = el.getText();
-            if (text != null && !text.trim().isEmpty()) names.add(text.trim());
+        Set<String> found = new LinkedHashSet<>();
+        for (int i = 0; i < 4; i++) {                       // check each screen while scrolling down
+            for (Product product : Product.values()) {
+                By title = By.xpath("//android.widget.TextView[@text=\"" + product.displayName() + "\"]");
+                if (!findElements(title).isEmpty()) {
+                    found.add(product.displayName());
+                }
+            }
+            scrollDown();
         }
-        return names;
+        return new ArrayList<>(found);
     }
 
-    private double money(By locator) {
-        scrollUntilVisible(locator, 4);
-        return Double.parseDouble(getText(locator).replaceAll("[^0-9.]", ""));
+    private double money(String labelStart) {
+        ensureInitialized();
+        WebElement line = driver.findElement(AppiumBy.androidUIAutomator(
+                "new UiScrollable(new UiSelector().scrollable(true).instance(0))"
+                        + ".scrollIntoView(new UiSelector().textStartsWith(\"" + labelStart + "\"))"));
+        return Double.parseDouble(line.getText().replaceAll("[^0-9.]", ""));
     }
 
-    public double getItemTotal() { return money(itemTotal); }
-    public double getTax()       { return money(tax); }
-    public double getTotal()     { return money(total); }
+    public double getItemTotal() { return money("Item total"); }
+    public double getTax()       { return money("Tax"); }
+    public double getTotal()     { return money("Total:"); }
 
     @Step("Finish the order")
     public CheckoutCompletePage finish() {

@@ -40,7 +40,6 @@ public class ProductsPage extends BasePage {
 
     private final By screenTitle   = By.xpath("//android.widget.TextView[@text=\"PRODUCTS\"]");
     private final By productTitles = AppiumBy.accessibilityId("test-Item title");
-    private final By sortButton    = AppiumBy.accessibilityId("test-Modal Selector Button");
     private final By layoutToggle  = AppiumBy.accessibilityId("test-Toggle");
 
     // ── Dynamic locators ──────────────────────────────────────────────────────

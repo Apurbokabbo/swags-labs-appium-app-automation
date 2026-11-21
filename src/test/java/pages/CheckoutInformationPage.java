@@ -15,7 +15,6 @@ public class CheckoutInformationPage extends BasePage {
     private final By lastNameInput  = AppiumBy.accessibilityId("test-Last Name");
     private final By zipInput       = AppiumBy.accessibilityId("test-Zip/Postal Code");
     private final By continueButton = AppiumBy.accessibilityId("test-CONTINUE");
-    private final By cancelButton   = AppiumBy.accessibilityId("test-CANCEL");
     private final By errorMessage   = By.xpath("//android.view.ViewGroup[@content-desc=\"test-Error message\"]/android.widget.TextView");
 
     public void waitUntilLoaded() {
