@@ -39,9 +39,7 @@ public class CheckoutTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 1, dataProvider = "missingCheckoutFields",
-            description = "Checkout form validates required fields",
-            groups = {"regression", "negative"})
+    @Test(priority = 1, dataProvider = "missingCheckoutFields", description = "Checkout form validates required fields", groups = {"regression"})
     public void requiredFieldValidationTest(String first, String last, String zip, String expectedError) {
         CheckoutInformationPage info = goToCheckoutInfo(Product.BACKPACK);
 
@@ -51,8 +49,7 @@ public class CheckoutTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 2, description = "Cancel on the information screen returns to the cart",
-            groups = {"regression"})
+    @Test(priority = 2, description = "Cancel on the information screen returns to the cart", groups = {"regression"})
     public void cancelReturnsToCartTest() {
         CheckoutInformationPage info = goToCheckoutInfo(Product.BACKPACK);
 
@@ -60,8 +57,7 @@ public class CheckoutTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 3, description = "Overview lists the items and the totals add up",
-            groups = {"regression"})
+    @Test(priority = 3, description = "Overview lists the items and the totals add up", groups = {"regression"})
     public void overviewTotalsTest() {
         CheckoutOverviewPage overview = goToCheckoutInfo(Product.BACKPACK, Product.BIKE_LIGHT)
                 .continueToOverview(TestData.FIRST_NAME, TestData.LAST_NAME, TestData.ZIP_CODE);
@@ -70,8 +66,7 @@ public class CheckoutTestCases extends AuthenticatedTest {
 
         SoftAssert soft = new SoftAssert();
         soft.assertEquals(new HashSet<>(overview.getItemNames()),
-                new HashSet<>(Arrays.asList(Product.BACKPACK.displayName(), Product.BIKE_LIGHT.displayName())),
-                "Items on overview");
+                new HashSet<>(Arrays.asList(Product.BACKPACK.displayName(), Product.BIKE_LIGHT.displayName())), "Items on overview");
         double itemTotal = overview.getItemTotal();
         double tax = overview.getTax();
         soft.assertEquals(itemTotal, expectedItemTotal, 0.001, "Item total");
@@ -80,8 +75,7 @@ public class CheckoutTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.BLOCKER)
-    @Test(priority = 4, description = "E2E: complete a purchase and return home with an empty cart",
-            groups = {"regression", "smoke"})
+    @Test(priority = 4, description = "E2E: complete a purchase and return home with an empty cart", groups = {"regression", "smoke"})
     public void completePurchaseTest() {
         CheckoutCompletePage complete = goToCheckoutInfo(Product.BACKPACK)
                 .continueToOverview(TestData.FIRST_NAME, TestData.LAST_NAME, TestData.ZIP_CODE)

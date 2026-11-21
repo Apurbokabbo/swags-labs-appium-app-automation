@@ -14,7 +14,7 @@ public class LoginPage extends BasePage {
     public static final String PASSWORD_INFO_TEXT     = "And the password for all users is:";
     public static final String USERNAME_REQUIRED      = "Username is required";
     public static final String PASSWORD_REQUIRED      = "Password is required";
-    public static final String INVALID_CREDENTIALS    = "Username and password do not match any user in this service";
+    public static final String INVALID_CREDENTIALS    = "Username and password do not match any user in this service.";
     public static final String LOCKED_OUT             = "Sorry, this user has been locked out.";
 
     // ── Locators (accessibility id is faster and more stable than XPath) ──────
