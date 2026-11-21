@@ -13,11 +13,12 @@ import pages.MenuPage;
 @Feature("Side menu")
 public class MenuTestCases extends AuthenticatedTest {
 
+    MenuPage menu = productsPage.openMenu();
+
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 1, description = "Side menu shows its main entries",
-            groups = {"regression"})
+    @Test(priority = 1, description = "Side menu shows its main entries", groups = {"regression"})
     public void menuItemsDisplayedTest() {
-        MenuPage menu = productsPage.openMenu();
+
 
         SoftAssert soft = new SoftAssert();
         soft.assertTrue(menu.isOpen(), "Menu is open");
@@ -26,21 +27,21 @@ public class MenuTestCases extends AuthenticatedTest {
         soft.assertTrue(menu.isLogoutDisplayed(), "LOGOUT");
         soft.assertTrue(menu.isResetAppStateDisplayed(), "RESET APP STATE");
         soft.assertAll();
+        menu.takeScreenshot("Menu items displayed");
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 2, description = "Logout returns to the login screen",
-            groups = {"regression", "smoke"})
+    @Test(priority = 2, description = "Logout returns to the login screen", groups = {"regression", "smoke"})
     public void logoutTest() {
         Assert.assertTrue(productsPage.openMenu().logout().isLoaded(), "Login page should be shown after logout");
+        menu.takeScreenshot("After logout take  user to login page");
+
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 3, description = "ALL ITEMS from the cart screen goes back to products",
-            groups = {"regression"})
+    @Test(priority = 3, description = "ALL ITEMS from the cart screen goes back to products", groups = {"regression"})
     public void allItemsNavigationTest() {
         MenuPage menu = productsPage.openCart().openMenu();
-
         Assert.assertTrue(menu.openAllItems().isLoaded(), "Products page should be shown");
     }
 }
