@@ -127,7 +127,7 @@ public class ProductsPage extends BasePage {
         }
     }
 
-    private void scrollListToTop() {
+    public void scrollListToTop() {
         for (int i = 0; i < 5 && scrollList("up", 1.0); i++) {
             pause(300);
         }
@@ -137,15 +137,23 @@ public class ProductsPage extends BasePage {
     private boolean scrollList(String direction, double percent) {
         ensureInitialized();
         try {
-            WebElement list = driver.findElement(AppiumBy.androidUIAutomator(
-                    "new UiSelector().scrollable(true).instance(0)"));
+            List<WebElement> scrollables = driver.findElements(
+                    AppiumBy.androidUIAutomator("new UiSelector().scrollable(true)"));
+            debug("scrollable elements on screen: " + scrollables.size());
+            if (scrollables.isEmpty()) {
+                return false;
+            }
+            WebElement list = scrollables.get(0);
+            debug("scrolling " + direction + " on class=" + list.getAttribute("class")
+                    + " desc=" + list.getAttribute("content-desc"));
             Object result = driver.executeScript("mobile: scrollGesture", Map.of(
                     "elementId", ((RemoteWebElement) list).getId(),
                     "direction", direction,
                     "percent", percent));
             return Boolean.TRUE.equals(result);
-        } catch (NoSuchElementException e) {
-            return false; // nothing scrollable on screen
+        } catch (Exception e) {
+            debug("scroll failed: " + e);
+            return false;
         }
     }
 

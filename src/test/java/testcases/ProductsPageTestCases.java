@@ -84,9 +84,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
         // Z-A first: A-Z is the default order, so testing it alone could never fail
         productsPage.sortBy(SortOption.NAME_DESC);
         Assert.assertEquals(productsPage.getAllProductNames(), descending, "Name (Z to A)");
-        productsPage.scrollUp(); // again go to top
-        productsPage.scrollUp();
-        productsPage.scrollUp();
+        productsPage.scrollListToTop(); // again go to top
         productsPage.sortBy(SortOption.NAME_ASC);
         Assert.assertEquals(productsPage.getAllProductNames(), ascending, "Name (A to Z)");
     }
@@ -98,9 +96,7 @@ public class ProductsPageTestCases extends AuthenticatedTest {
         List<Double> low = productsPage.prices(productsPage.getAllProductNames());
         Assert.assertEquals(low.size(), Product.values().length, "All products listed");
         Assert.assertTrue(productsPage.isNonDecreasing(low), "Price (low to high) but got " + low);
-        productsPage.scrollUp(); // again go to top
-        productsPage.scrollUp();
-        productsPage.scrollUp();
+        productsPage.scrollListToTop(); // again go to top
         productsPage.sortBy(SortOption.PRICE_HIGH_LOW);
         List<Double> high = productsPage.prices(productsPage.getAllProductNames());
         List<Double> reversed = new ArrayList<>(high);
