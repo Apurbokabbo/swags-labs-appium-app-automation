@@ -8,6 +8,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
+import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -16,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.asserts.SoftAssert;
 import utilities.BaseDriver;
+import utilities.Product;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -461,6 +464,36 @@ public class BasePage extends CommonLocators {
         }
 
         return null;
+    }
+    protected void scrollToTop() {
+        ensureInitialized();
+        for (int i = 0; i < 5; i++) {
+            List<WebElement> scrollables = driver.findElements(
+                    AppiumBy.androidUIAutomator("new UiSelector().scrollable(true)"));
+            if (scrollables.isEmpty()) return;
+            Object canScrollMore = driver.executeScript("mobile: scrollGesture", Map.of(
+                    "elementId", ((RemoteWebElement) scrollables.get(0)).getId(),
+                    "direction", "up",
+                    "percent", 1.0));
+            if (!Boolean.TRUE.equals(canScrollMore)) return;
+        }
+    }
+
+    /** Finds which known products are on the current screen, scrolling top to bottom. */
+    protected List<String> collectKnownProductNames() {
+        Set<String> found = new LinkedHashSet<>();
+        scrollToTop();
+        for (int i = 0; i < 4; i++) {
+            for (Product product : Product.values()) {
+                By title = By.xpath("//android.widget.TextView[@text=\"" + product.displayName() + "\"]");
+                if (!findElements(title).isEmpty()) {
+                    found.add(product.displayName());
+                }
+            }
+            scrollDown();
+        }
+        scrollToTop();
+        return new ArrayList<>(found);
     }
 
 }

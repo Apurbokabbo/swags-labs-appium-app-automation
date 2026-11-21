@@ -30,8 +30,7 @@ public class CartPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 2, description = "Cart lists exactly the products that were added",
-            groups = {"regression", "smoke"})
+    @Test(priority = 2, description = "Cart lists exactly the products that were added", groups = {"regression", "smoke"})
     public void cartShowsAddedProductsTest() {
         productsPage.addToCart(Product.BACKPACK).addToCart(Product.BIKE_LIGHT);
 
@@ -43,8 +42,7 @@ public class CartPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 3, description = "Removing one item leaves the other and updates the badge",
-            groups = {"regression"})
+    @Test(priority = 3, description = "Removing one item leaves the other and updates the badge", groups = {"regression"})
     public void removeOneItemFromCartTest() {
         productsPage.addToCart(Product.BACKPACK).addToCart(Product.BIKE_LIGHT);
         CartPage cart = productsPage.openCart();
@@ -58,8 +56,7 @@ public class CartPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 4, description = "Removing the last item empties the cart and hides the badge",
-            groups = {"regression"})
+    @Test(priority = 4, description = "Removing the last item empties the cart and hides the badge", groups = {"regression"})
     public void removeLastItemTest() {
         productsPage.addToCart(Product.ONESIE);
         CartPage cart = productsPage.openCart();
@@ -73,8 +70,7 @@ public class CartPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.NORMAL)
-    @Test(priority = 5, description = "Continue Shopping keeps the cart content",
-            groups = {"regression"})
+    @Test(priority = 5, description = "Continue Shopping keeps the cart content", groups = {"regression"})
     public void continueShoppingKeepsCartTest() {
         productsPage.addToCart(Product.BOLT_TSHIRT);
 
@@ -84,8 +80,7 @@ public class CartPageTestCases extends AuthenticatedTest {
     }
 
     @Severity(SeverityLevel.CRITICAL)
-    @Test(priority = 6, description = "Checkout button opens the information form",
-            groups = {"regression"})
+    @Test(priority = 6, description = "Checkout button opens the information form", groups = {"regression"})
     public void checkoutOpensInformationPageTest() {
         productsPage.addToCart(Product.BACKPACK);
 

@@ -29,7 +29,6 @@ public class CheckoutOverviewPage extends BasePage {
 
         return isElementVisible(screenTitle, 10);
     }
-
     public List<String> getItemNames() {
         Set<String> found = new LinkedHashSet<>();
         for (int i = 0; i < 4; i++) {                       // check each screen while scrolling down
@@ -43,6 +42,7 @@ public class CheckoutOverviewPage extends BasePage {
         }
         return new ArrayList<>(found);
     }
+
 
     private double money(String labelStart) {
         ensureInitialized();

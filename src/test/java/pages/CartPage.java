@@ -17,7 +17,7 @@ public class CartPage extends BasePage {
     private final By checkoutButton   = AppiumBy.accessibilityId("test-CHECKOUT");
 
     private By removeButtonFor(Product product) {
-        return By.xpath("//android.widget.TextView[@content-desc=\"test-Item title\" and @text=\"" + product.displayName() + "\"]"
+        return By.xpath("//android.widget.TextView[@text=\"" + product.displayName() + "\"]"
                 + "/ancestor::android.view.ViewGroup[.//android.view.ViewGroup[@content-desc=\"test-REMOVE\"]][1]"
                 + "//android.view.ViewGroup[@content-desc=\"test-REMOVE\"]");
     }
@@ -31,13 +31,9 @@ public class CartPage extends BasePage {
     }
 
     public List<String> getItemNames() {
-        List<String> names = new ArrayList<>();
-        for (WebElement el : findElements(itemTitles)) {
-            String text = el.getText();
-            if (text != null && !text.trim().isEmpty()) names.add(text.trim());
-        }
-        return names;
+        return collectKnownProductNames();
     }
+
 
     @Step("Remove '{product}' from the cart")
     public CartPage removeItem(Product product) {
